@@ -148,18 +148,25 @@ _All providers above have generous free tiers suitable for this demo._
 
 This project connects to Supabase using a service-role connection string so Prisma/NextAuth can manage the `User`, `Account`, `Session`, and `VerificationToken` tables directly. Because Supabase's built-in `auth.uid()` is not used, we disable Row Level Security on `public."Account"` (see migration `20251120050500_disable_account_rls`). If you plan to expose the database via anon/auth roles or Supabase Auth, re-enable RLS and add the appropriate policies.
 
-### Supabase Connection String for Prisma
+### Supabase Connection String for Prisma with Connection Pooler
 
-**Important**: For Prisma to work correctly with Supabase in serverless environments (like Vercel), use the **Direct connection** string, NOT the Connection Pooler.
+To use Supabase's connection pooler with Prisma:
 
 1. Go to Supabase Dashboard → Settings → Database
-2. Under "Connection string", select **"Direct connection"** (not "Connection pooling")
-3. Copy the connection string (it will use port 5432 and a hostname without "pooler")
-4. Use this as your `DATABASE_URL` in Vercel
+2. Under "Connection string", select **"Connection pooling"**
+3. **Important**: Select **"Session" mode** (NOT "Transaction" mode)
+4. Copy the connection string - it should:
+   - Use port **6543** (pooler port)
+   - Include `?pgbouncer=true` in the connection string
+   - Have a hostname like `aws-1-us-east-2.pooler.supabase.com`
+5. Use this as your `DATABASE_URL` in Vercel
 
-**Why?** Prisma uses prepared statements which conflict with pgbouncer (the connection pooler). The direct connection works better for Prisma in serverless environments.
+**Example format:**
+```
+postgresql://postgres:[PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true
+```
 
-If you must use the pooler, ensure your connection string includes `?pgbouncer=true` parameter, but the direct connection is recommended.
+**Why Session mode?** Prisma requires session-level features that aren't available in Transaction mode. The `pgbouncer=true` parameter tells Prisma to disable prepared statements, which are incompatible with connection poolers.
 
 ## Local development
 
