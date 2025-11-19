@@ -374,7 +374,7 @@ export function TaskForm({ initialValues, onSubmit, isSubmitting }: Props) {
           />
         </div>
 
-        <div className="flex justify-end gap-2 pb-4">
+        <div className="flex justify-end gap-2 pb-8">
           <Button
             type="submit"
             disabled={isSubmitting}

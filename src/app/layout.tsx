@@ -27,6 +27,12 @@ export const metadata: Metadata = {
   title: "Smart To-Do",
   description:
     "Production-ready smart to-do list with email and calendar integrations.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({
