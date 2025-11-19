@@ -226,11 +226,6 @@ export const listTasks = async (query: URLSearchParams | TaskQuery, userId: stri
       ? taskQuerySchema.parse(Object.fromEntries(query.entries()))
       : query;
 
-  // Debug logging
-  if (parsed.status) {
-    console.log("[tasks] Filtering by status:", parsed.status);
-  }
-
     const where = buildWhereClause(parsed, userId);
 
     return await prisma.task.findMany({
