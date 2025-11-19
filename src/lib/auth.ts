@@ -16,7 +16,6 @@ import { sendMagicLinkEmail } from "./email-auth";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true, // Required for NextAuth v5
-  baseUrl: process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   providers: [
     EmailProvider({
       // Minimal server config (required by NextAuth but not used since we override sendVerificationRequest)
