@@ -30,7 +30,7 @@ export function TaskFormDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-2rem)] flex flex-col p-0 top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] flex flex-col p-0 top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]">
         <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle>
             {mode === "create" ? "Create a task" : "Update task"}
@@ -39,7 +39,7 @@ export function TaskFormDialog({
             Configure task metadata, integrations, and due date.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0">
           <TaskForm
             onSubmit={onSubmit}
             initialValues={initialValues}
