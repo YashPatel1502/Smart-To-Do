@@ -134,14 +134,23 @@ export function TasksDashboard() {
       } else {
         nextStatus = "PENDING";
       }
+      
+      // Explicitly preserve due date when marking as active
+      // This ensures the due date is not lost during the status update
+      updateTask.mutate({
+        id: task.id,
+        values: { 
+          status: nextStatus,
+          dueDate: task.dueDate, // Explicitly preserve due date
+        },
+      });
     } else {
       nextStatus = "COMPLETED";
+      updateTask.mutate({
+        id: task.id,
+        values: { status: nextStatus },
+      });
     }
-    
-    updateTask.mutate({
-      id: task.id,
-      values: { status: nextStatus },
-    });
   };
 
   const currentInitialValues: TaskFormValues = editingTask
