@@ -110,8 +110,10 @@ const computeCompletedAt = (
   return undefined;
 };
 
-const buildWhereClause = (params: TaskQuery): Prisma.TaskWhereInput => {
-  const where: Prisma.TaskWhereInput = {};
+const buildWhereClause = (params: TaskQuery, userId: string): Prisma.TaskWhereInput => {
+  const where: Prisma.TaskWhereInput = {
+    userId, // Always filter by user
+  };
 
   if (params.status) {
     where.status = params.status;
@@ -170,10 +172,11 @@ const syncCalendarAfterWrite = async (task: {
   calendarSync: boolean;
   calendarEventId: string | null;
   priority: string;
+  userId: string | null;
 }) => {
   if (!task.calendarSync || !task.dueDate) {
     try {
-      await deleteCalendarEvent(task.calendarEventId ?? undefined);
+      await deleteCalendarEvent(task.calendarEventId ?? undefined, task.userId ?? undefined);
     } catch (error) {
       console.error("[tasks] Failed to delete calendar event during sync", error);
     }
@@ -188,6 +191,7 @@ const syncCalendarAfterWrite = async (task: {
         dueDate: task.dueDate,
         priority: task.priority,
         taskId: task.id,
+        userId: task.userId ?? undefined,
       });
     }
 
@@ -197,6 +201,7 @@ const syncCalendarAfterWrite = async (task: {
       dueDate: task.dueDate,
       priority: task.priority,
       taskId: task.id,
+      userId: task.userId ?? undefined,
     });
   } catch (error) {
     console.error("[tasks] Calendar sync failed", error);
@@ -214,14 +219,14 @@ const syncCalendarAfterWrite = async (task: {
  * @returns Promise resolving to an array of tasks matching the query
  * @throws {z.ZodError} If query parameters fail validation
  */
-export const listTasks = async (query: URLSearchParams | TaskQuery) => {
+export const listTasks = async (query: URLSearchParams | TaskQuery, userId: string) => {
   try {
     const parsed =
       query instanceof URLSearchParams
         ? taskQuerySchema.parse(Object.fromEntries(query.entries()))
         : query;
 
-    const where = buildWhereClause(parsed);
+    const where = buildWhereClause(parsed, userId);
 
     return await prisma.task.findMany({
       where,
@@ -252,11 +257,14 @@ export const listTasks = async (query: URLSearchParams | TaskQuery) => {
  * @returns Promise resolving to the created task (with calendarEventId if applicable)
  * @throws {Error} If database operation fails
  */
-export const createTask = async (payload: TaskPayload) => {
+export const createTask = async (payload: TaskPayload, userId: string, userEmail: string) => {
   try {
     const data = normalizePayload(payload);
     const task = await prisma.task.create({
-      data,
+      data: {
+        ...data,
+        userId,
+      },
     });
 
   if (task.dueDate) {
@@ -270,7 +278,7 @@ export const createTask = async (payload: TaskPayload) => {
           priority: task.priority,
           status: task.status,
           category: task.category ?? undefined,
-        });
+        }, userEmail);
       } catch (error) {
         console.error("[tasks] Email notification failed, task still created", error);
       }
@@ -285,6 +293,7 @@ export const createTask = async (payload: TaskPayload) => {
           dueDate: task.dueDate,
           priority: task.priority,
           taskId: task.id,
+          userId,
         });
 
         if (eventId) {
@@ -326,7 +335,7 @@ export const createTask = async (payload: TaskPayload) => {
  * @returns Promise resolving to the updated task
  * @throws {Error} If task not found or database operation fails
  */
-export const updateTask = async (payload: TaskUpdatePayload) => {
+export const updateTask = async (payload: TaskUpdatePayload, userId: string, userEmail: string) => {
   try {
     const existing = await prisma.task.findUnique({
       where: { id: payload.id },
@@ -334,6 +343,11 @@ export const updateTask = async (payload: TaskUpdatePayload) => {
 
     if (!existing) {
       throw new Error("Task not found");
+    }
+
+    // Verify task belongs to user
+    if (existing.userId !== userId) {
+      throw new Error("Unauthorized");
     }
 
     const completedAt = computeCompletedAt(existing.status, payload.status);
@@ -365,7 +379,10 @@ export const updateTask = async (payload: TaskUpdatePayload) => {
   // Sync calendar events (non-blocking)
   if (updated.dueDate) {
     try {
-      const eventId = await syncCalendarAfterWrite(updated);
+      const eventId = await syncCalendarAfterWrite({
+        ...updated,
+        userId: updated.userId,
+      });
       if (eventId && eventId !== updated.calendarEventId) {
         nextTask = await prisma.task.update({
           where: { id: updated.id },
@@ -377,7 +394,7 @@ export const updateTask = async (payload: TaskUpdatePayload) => {
     }
   } else {
     try {
-      await deleteCalendarEvent(updated.calendarEventId ?? undefined);
+      await deleteCalendarEvent(updated.calendarEventId ?? undefined, userId);
       if (updated.calendarEventId) {
         nextTask = await prisma.task.update({
           where: { id: updated.id },
@@ -400,7 +417,7 @@ export const updateTask = async (payload: TaskUpdatePayload) => {
         priority: nextTask.priority,
         status: nextTask.status,
         category: nextTask.category ?? undefined,
-      });
+      }, userEmail);
     } catch (error) {
       console.error("[tasks] Email notification failed, task still updated", error);
     }
@@ -432,7 +449,7 @@ export const updateTask = async (payload: TaskUpdatePayload) => {
  * @returns Promise resolving to the deleted task
  * @throws {Error} If task not found or database operation fails
  */
-export const deleteTask = async (id: string) => {
+export const deleteTask = async (id: string, userId: string, userEmail: string) => {
   try {
     // Validate ID format
     if (!id || typeof id !== "string" || id.trim().length === 0) {
@@ -448,6 +465,11 @@ export const deleteTask = async (id: string) => {
       throw new Error("Task not found");
     }
 
+    // Verify task belongs to user
+    if (task.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
   // Send email notification before deleting (non-blocking)
   if (task.emailNotification) {
     try {
@@ -458,7 +480,7 @@ export const deleteTask = async (id: string) => {
         priority: task.priority,
         status: task.status,
         category: task.category ?? undefined,
-      });
+      }, userEmail);
     } catch (error) {
       console.error("[tasks] Email notification failed, task still deleted", error);
     }
@@ -467,7 +489,7 @@ export const deleteTask = async (id: string) => {
   // Delete calendar event if it exists (non-blocking)
   if (task.calendarEventId) {
     try {
-      await deleteCalendarEvent(task.calendarEventId);
+      await deleteCalendarEvent(task.calendarEventId, userId);
     } catch (error) {
       console.error("[tasks] Calendar cleanup failed, task still deleted", error);
     }

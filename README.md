@@ -130,23 +130,17 @@ prisma/
 
 Create `.env` (and `.env.example` for reference) with the following keys:
 
-| Variable | Description | Required |
-| --- | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string (Supabase, Neon, local, etc.) | ✅ **Required** |
-| `SENDGRID_API_KEY` | SendGrid API key (free tier 100 emails/day) | ⚠️ Optional - app works without it |
-| `EMAIL_FROM` | Verified sender email in SendGrid | ⚠️ Optional - app works without it |
-| `NOTIFICATION_EMAIL` | Recipient email (can match `EMAIL_FROM`) | ⚠️ Optional - app works without it |
-| `GOOGLE_CLIENT_ID` | OAuth client ID for Google Cloud project | ⚠️ Optional - app works without it |
-| `GOOGLE_CLIENT_SECRET` | OAuth client secret | ⚠️ Optional - app works without it |
-| `GOOGLE_REFRESH_TOKEN` | Refresh token with `https://www.googleapis.com/auth/calendar` scope | ⚠️ Optional - app works without it |
-| `GOOGLE_CALENDAR_ID` | Calendar ID to create events in (e.g., `primary`) | ⚠️ Optional - app works without it |
-| `NEXT_PUBLIC_APP_URL` | Base URL for the deployed app (used in emails if needed) | ⚠️ Optional |
-
-**Important Notes:**
-- ✅ **Database is required** - The app needs a PostgreSQL database to function
-- ⚠️ **Integrations are optional** - The app works perfectly without email/calendar credentials
-- 🔒 **Use your own credentials** - Each reviewer should use their own SendGrid and Google Calendar credentials
-- 📧 **Email/Calendar failures are non-blocking** - Tasks are created/updated even if integrations fail
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string (Supabase, Neon, local, etc.) |
+| `SENDGRID_API_KEY` | SendGrid API key (free tier 100 emails/day) |
+| `EMAIL_FROM` | Verified sender email in SendGrid |
+| `NOTIFICATION_EMAIL` | Recipient email (can match `EMAIL_FROM`) |
+| `GOOGLE_CLIENT_ID` | OAuth client ID for Google Cloud project |
+| `GOOGLE_CLIENT_SECRET` | OAuth client secret |
+| `GOOGLE_REFRESH_TOKEN` | Refresh token with `https://www.googleapis.com/auth/calendar` scope |
+| `GOOGLE_CALENDAR_ID` | Calendar ID to create events in (e.g., `primary`) |
+| `NEXT_PUBLIC_APP_URL` | Base URL for the deployed app (used in emails if needed) |
 
 _All providers above have generous free tiers suitable for this demo._
 
@@ -184,19 +178,9 @@ npm run lint
 
 1. Push the repo to GitHub.
 2. Create a PostgreSQL database (Supabase/Neon) and copy the connection string.
-3. **(Optional)** Provision SendGrid + Google credentials for integrations:
-   - If you want to test email/calendar features, set up your own credentials
-   - The app works without these - tasks can be created/updated/deleted without integrations
-   - See `DEPLOYMENT_GUIDE.md` for detailed setup instructions
+3. Provision SendGrid + Google credentials, populate Vercel project environment variables.
 4. Import the repo in Vercel, select the Next.js framework preset, and deploy.
-5. Add environment variables in Vercel dashboard (at minimum, `DATABASE_URL` is required).
-6. After deployment, run `npm run prisma:migrate` (locally or via Vercel CLI) so the remote DB schema matches.
-
-**For Reviewers/Testers:**
-- The app works with **only** `DATABASE_URL` configured
-- Email and calendar integrations are **optional** - the app gracefully handles missing credentials
-- To test integrations, set up your own SendGrid and Google Calendar credentials
-- All integrations are **non-blocking** - failures don't prevent task operations
+5. After deployment, run `npm run prisma:migrate` (locally or via Vercel CLI) so the remote DB schema matches.
 
 ## Loom walkthrough (deliverable reminder)
 
@@ -213,7 +197,6 @@ Record a 2–5 minute Loom covering:
 - Single demo user (no authentication required for assignment)
 - Free-tier services sufficient for demo
 - Vercel deployment target
-- **Reviewers will use their own credentials** for email/calendar integrations (or test without them)
 
 ### Limitations
 - **No user authentication**: Schema supports `userId` but auth not implemented
@@ -241,7 +224,6 @@ Record a 2–5 minute Loom covering:
 - **`README.md`**: This file - setup, architecture, deployment, assumptions, limitations
 - **`DEPLOYMENT_GUIDE.md`**: Step-by-step deployment guide for GitHub and Vercel
 - **`GITHUB_SETUP.md`**: GitHub repository setup instructions
-- **`REVIEWER_GUIDE.md`**: Quick start guide for reviewers/testers (includes testing without integrations)
 
 ---
 

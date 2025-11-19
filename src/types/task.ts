@@ -8,10 +8,10 @@ export type TaskStatus = (typeof taskStatusValues)[number];
 
 export type TaskFormValues = {
   title: string;
-  description: string;
+  description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  category: string;
+  category?: string;
   dueDate: Date | null;
   emailNotification: boolean;
   calendarSync: boolean;

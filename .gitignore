@@ -34,6 +34,7 @@ dist/
 # ============================================
 # Generated Prisma Client (regenerated on install)
 /src/generated/prisma/
+prisma/migrations/*.sql
 
 # ============================================
 # TypeScript
@@ -86,3 +87,11 @@ Desktop.ini
 .npm/
 .eslintcache
 *.log
+
+# ============================================
+# Verification Documents (temporary)
+# ============================================
+# These are verification docs created during development
+# Can be removed or kept based on preference
+REQUIREMENTS_VERIFICATION.md
+VERIFICATION_SUMMARY.md

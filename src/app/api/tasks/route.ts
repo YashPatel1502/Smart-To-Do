@@ -10,6 +10,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { auth } from "@/lib/auth";
 
 import { createTask, listTasks } from "@/lib/tasks";
 import { taskCreateSchema } from "@/lib/validations";
@@ -27,7 +28,15 @@ export const runtime = "nodejs";
  */
 export async function GET(request: NextRequest) {
   try {
-    const tasks = await listTasks(request.nextUrl.searchParams);
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const tasks = await listTasks(request.nextUrl.searchParams, session.user.id);
     return NextResponse.json({ data: tasks });
   } catch (error) {
     console.error("[api/tasks] GET failed", error);
@@ -35,7 +44,7 @@ export async function GET(request: NextRequest) {
     // Handle validation errors
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Invalid query parameters", details: error.errors },
+        { error: "Invalid query parameters", details: error.issues },
         { status: 400 }
       );
     }
@@ -57,6 +66,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     // Handle invalid JSON body
     let body;
     try {
@@ -69,18 +86,18 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = taskCreateSchema.parse(body);
-    const task = await createTask(payload);
+    const task = await createTask(payload, session.user.id, session.user.email);
     return NextResponse.json({ data: task }, { status: 201 });
   } catch (error) {
     console.error("[api/tasks] POST failed", error);
     
     // Handle validation errors with detailed messages
     if (error instanceof ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       return NextResponse.json(
         { 
           error: firstError?.message ?? "Invalid task data",
-          details: error.errors 
+          details: error.issues 
         },
         { status: 400 }
       );

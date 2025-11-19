@@ -13,6 +13,7 @@
  */
 
 import { google } from "googleapis";
+import { prisma } from "./prisma";
 
 const calendarId = process.env.GOOGLE_CALENDAR_ID;
 const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -25,20 +26,56 @@ type CalendarEventInput = {
   dueDate: Date;
   priority?: string;
   taskId: string;
+  userId?: string; // Optional: for per-user calendar sync
 };
 
-const getOAuthClient = () => {
-  if (!clientId || !clientSecret || !refreshToken) {
+const getOAuthClient = async (userId?: string) => {
+  if (!clientId || !clientSecret) {
     console.warn("[calendar] Missing Google OAuth credentials.");
-    return null;
+    return { client: null, calendarId: null };
+  }
+
+  // Try to get user's refresh token if userId provided
+  let userRefreshToken: string | null = null;
+  let userCalendarId: string | null = null;
+  
+  if (userId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { googleRefreshToken: true, googleCalendarId: true },
+      });
+      if (user?.googleRefreshToken) {
+        userRefreshToken = user.googleRefreshToken;
+        userCalendarId = user.googleCalendarId ?? "primary";
+      }
+    } catch (error) {
+      console.error("[calendar] Failed to fetch user token", error);
+    }
+  }
+
+  // Only use user's token (no fallback to env var for per-user calendar)
+  // If userId is provided, we require the user to have connected their calendar
+  if (userId && !userRefreshToken) {
+    console.warn("[calendar] User has not connected Google Calendar.");
+    return { client: null, calendarId: null };
+  }
+
+  // Fallback to env var only if no userId provided (backward compatibility)
+  const token = userRefreshToken || (userId ? null : refreshToken);
+  const calId = userCalendarId || (userId ? "primary" : calendarId || "primary");
+
+  if (!token) {
+    console.warn("[calendar] Missing refresh token.");
+    return { client: null, calendarId: null };
   }
 
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
   oauth2Client.setCredentials({
-    refresh_token: refreshToken,
+    refresh_token: token,
   });
 
-  return oauth2Client;
+  return { client: oauth2Client, calendarId: calId };
 };
 
 const buildEventBody = (input: CalendarEventInput) => {
@@ -62,18 +99,16 @@ const buildEventBody = (input: CalendarEventInput) => {
 };
 
 export const createCalendarEvent = async (input: CalendarEventInput) => {
-  if (!calendarId) {
-    console.warn("[calendar] Missing GOOGLE_CALENDAR_ID, skipping event sync.");
+  const { client: auth, calendarId: calId } = await getOAuthClient(input.userId);
+  if (!auth || !calId) {
+    console.warn("[calendar] Missing OAuth client or calendar ID, skipping event sync.");
     return null;
   }
-
-  const auth = getOAuthClient();
-  if (!auth) return null;
 
   try {
     const calendar = google.calendar({ version: "v3", auth });
     const response = await calendar.events.insert({
-      calendarId,
+      calendarId: calId,
       requestBody: buildEventBody(input),
     });
     return response.data.id ?? null;
@@ -87,14 +122,14 @@ export const updateCalendarEvent = async (
   eventId: string,
   input: CalendarEventInput
 ) => {
-  if (!calendarId || !eventId) return null;
-  const auth = getOAuthClient();
-  if (!auth) return null;
+  if (!eventId) return null;
+  const { client: auth, calendarId: calId } = await getOAuthClient(input.userId);
+  if (!auth || !calId) return null;
 
   try {
     const calendar = google.calendar({ version: "v3", auth });
     const response = await calendar.events.patch({
-      calendarId,
+      calendarId: calId,
       eventId,
       requestBody: buildEventBody(input),
     });
@@ -105,15 +140,18 @@ export const updateCalendarEvent = async (
   }
 };
 
-export const deleteCalendarEvent = async (eventId?: string | null) => {
-  if (!calendarId || !eventId) return;
-  const auth = getOAuthClient();
-  if (!auth) return;
+export const deleteCalendarEvent = async (
+  eventId?: string | null,
+  userId?: string
+) => {
+  if (!eventId) return;
+  const { client: auth, calendarId: calId } = await getOAuthClient(userId);
+  if (!auth || !calId) return;
 
   try {
     const calendar = google.calendar({ version: "v3", auth });
     await calendar.events.delete({
-      calendarId,
+      calendarId: calId,
       eventId,
     });
   } catch (error) {

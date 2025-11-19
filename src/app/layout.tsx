@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ToasterProvider } from "@/components/providers/toaster-provider";
+import { NextAuthSessionProvider } from "@/components/providers/session-provider";
 import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
@@ -43,10 +44,12 @@ export default function RootLayout({
           "min-h-screen bg-background font-sans antialiased"
         )}
       >
-        <QueryProvider>
-          {children}
-          <ToasterProvider />
-        </QueryProvider>
+        <NextAuthSessionProvider>
+          <QueryProvider>
+            {children}
+            <ToasterProvider />
+          </QueryProvider>
+        </NextAuthSessionProvider>
       </body>
     </html>
   );

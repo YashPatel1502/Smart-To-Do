@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, LogOut } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ import type {
 } from "@/types/task";
 
 import { AnimatedText } from "@/components/animated-text";
+import { GoogleCalendarButton } from "./google-calendar-button";
 import { TaskFiltersBar } from "./tasks-filters";
 import { TaskFormDialog } from "./tasks-form-dialog";
 import { TaskList } from "./tasks-list";
@@ -42,9 +45,18 @@ const emptyFormValues: TaskFormValues = {
 };
 
 export function TasksDashboard() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskWithDates | null>(null);
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    toast.success("Logged out successfully");
+    router.push("/login");
+    router.refresh();
+  };
 
   const queryFilters = useMemo(
     () => ({
@@ -155,15 +167,32 @@ export function TasksDashboard() {
           <p className="mt-1 text-sm text-muted-foreground text-left">
             Plan, prioritize, and ship
           </p>
+          {session?.user?.email && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {session.user.email}
+            </p>
+          )}
         </div>
-        <Button
-          onClick={() => setDialogOpen(true)}
-          disabled={isMutating}
-          className="transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shrink-0"
-        >
-          <Plus className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
-          New task
-        </Button>
+        <div className="flex items-center gap-2">
+          <GoogleCalendarButton />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="transition-all duration-300 hover:scale-105 active:scale-95"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+          <Button
+            onClick={() => setDialogOpen(true)}
+            disabled={isMutating}
+            className="transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shrink-0"
+          >
+            <Plus className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+            New task
+          </Button>
+        </div>
       </header>
 
       <AnimatedText className="py-2" speed={4000} tasks={tasks} />

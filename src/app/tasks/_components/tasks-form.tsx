@@ -282,6 +282,7 @@ export function TaskForm({ initialValues, onSubmit, isSubmitting }: Props) {
                           })()
                         }
                         onChange={(event) => {
+                          if (!field.value) return;
                           const [hours, minutes] = event.target.value
                             .split(":")
                             .map((value) => Number(value));

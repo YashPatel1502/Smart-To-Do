@@ -10,6 +10,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { auth } from "@/lib/auth";
 
 import { deleteTask, updateTask } from "@/lib/tasks";
 import { taskUpdateSchema } from "@/lib/validations";
@@ -37,6 +38,14 @@ export async function PATCH(
   context: RouteParams
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { taskId } = await context.params;
     
     // Validate taskId format
@@ -62,18 +71,18 @@ export async function PATCH(
       ...body,
       id: taskId,
     });
-    const task = await updateTask(payload);
+    const task = await updateTask(payload, session.user.id, session.user.email);
     return NextResponse.json({ data: task });
   } catch (error) {
     console.error("[api/tasks/:id] PATCH failed", error);
     
     // Handle validation errors
     if (error instanceof ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       return NextResponse.json(
         { 
           error: firstError?.message ?? "Invalid task data",
-          details: error.errors 
+          details: error.issues 
         },
         { status: 400 }
       );
@@ -108,6 +117,14 @@ export async function DELETE(
   context: RouteParams
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { taskId } = await context.params;
     
     // Validate taskId format
@@ -118,7 +135,7 @@ export async function DELETE(
       );
     }
 
-    const task = await deleteTask(taskId);
+    const task = await deleteTask(taskId, session.user.id, session.user.email);
     return NextResponse.json({ data: task });
   } catch (error) {
     console.error("[api/tasks/:id] DELETE failed", error);

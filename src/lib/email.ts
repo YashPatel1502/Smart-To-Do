@@ -41,9 +41,10 @@ const formatDate = (dueDate?: Date | null) => {
 
 const sendEmail = async (
   event: "created" | "updated" | "deleted",
-  payload: TaskEmailPayload
+  payload: TaskEmailPayload,
+  userEmail: string
 ) => {
-  if (!SENDGRID_API_KEY || !EMAIL_FROM || !NOTIFICATION_EMAIL) {
+  if (!SENDGRID_API_KEY || !EMAIL_FROM) {
     console.warn(
       "[email] Missing SENDGRID configuration. Skipping email delivery."
     );
@@ -75,7 +76,7 @@ const sendEmail = async (
       .join("\n");
 
     await sgMail.send({
-      to: NOTIFICATION_EMAIL,
+      to: userEmail, // Send to the user's email
       from: EMAIL_FROM,
       subject,
       text: emailBody,
@@ -85,11 +86,11 @@ const sendEmail = async (
   }
 };
 
-export const sendTaskCreatedEmail = (payload: TaskEmailPayload) =>
-  sendEmail("created", payload);
+export const sendTaskCreatedEmail = (payload: TaskEmailPayload, userEmail: string) =>
+  sendEmail("created", payload, userEmail);
 
-export const sendTaskUpdatedEmail = (payload: TaskEmailPayload) =>
-  sendEmail("updated", payload);
+export const sendTaskUpdatedEmail = (payload: TaskEmailPayload, userEmail: string) =>
+  sendEmail("updated", payload, userEmail);
 
-export const sendTaskDeletedEmail = (payload: TaskEmailPayload) =>
-  sendEmail("deleted", payload);
+export const sendTaskDeletedEmail = (payload: TaskEmailPayload, userEmail: string) =>
+  sendEmail("deleted", payload, userEmail);

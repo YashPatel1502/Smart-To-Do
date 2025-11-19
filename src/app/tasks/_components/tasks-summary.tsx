@@ -55,8 +55,8 @@ export function TaskSummary({ tasks }: Props) {
           <CardContent className="pt-0 pb-1.5">
             <div className="flex items-baseline justify-between">
               <p className="text-4xl font-bold tracking-tight text-foreground">
-                {metric.value}
-              </p>
+              {metric.value}
+            </p>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">{metric.helper}</p>
           </CardContent>
