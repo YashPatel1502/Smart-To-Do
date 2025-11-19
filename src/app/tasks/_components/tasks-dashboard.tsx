@@ -138,31 +138,16 @@ export function TasksDashboard() {
   };
 
   const handleStatusToggle = (task: TaskWithDates) => {
-    let nextStatus: "PENDING" | "IN_PROGRESS" | "COMPLETED";
-    
     if (task.status === "COMPLETED") {
-      // Restore to previous status if available, otherwise default to PENDING
-      const prevStatus = task.previousStatus ?? null;
-      if (prevStatus === "PENDING" || prevStatus === "IN_PROGRESS") {
-        nextStatus = prevStatus;
-      } else {
-        nextStatus = "PENDING";
-      }
-      
-      // Explicitly preserve due date when marking as active
-      // This ensures the due date is not lost during the status update
-      updateTask.mutate({
-        id: task.id,
-        values: { 
-          status: nextStatus,
-          dueDate: task.dueDate, // Explicitly preserve due date
-        },
-      });
+      // When marking a completed task as active, open the edit dialog
+      // so the user can update values (due date, priority, etc.) if needed
+      setEditingTask(task);
+      setDialogOpen(true);
     } else {
-      nextStatus = "COMPLETED";
+      // When marking an active task as completed, just update the status
       updateTask.mutate({
         id: task.id,
-        values: { status: nextStatus },
+        values: { status: "COMPLETED" },
       });
     }
   };
@@ -171,7 +156,15 @@ export function TasksDashboard() {
     ? {
         title: editingTask.title,
         description: editingTask.description ?? "",
-        status: editingTask.status,
+        // If task is COMPLETED, restore to previous status (or default to PENDING)
+        // This allows user to update values when marking as active
+        status:
+          editingTask.status === "COMPLETED"
+            ? (editingTask.previousStatus === "PENDING" ||
+              editingTask.previousStatus === "IN_PROGRESS"
+                ? editingTask.previousStatus
+                : "PENDING")
+            : editingTask.status,
         priority: editingTask.priority,
         category: editingTask.category ?? "",
         dueDate: editingTask.dueDate,
