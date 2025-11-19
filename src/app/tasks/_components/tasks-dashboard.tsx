@@ -167,31 +167,33 @@ export function TasksDashboard() {
           <p className="mt-1 text-sm text-muted-foreground text-left">
             Plan, prioritize, and ship
           </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <GoogleCalendarButton />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="transition-all duration-300 hover:scale-105 active:scale-95"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+            <Button
+              onClick={() => setDialogOpen(true)}
+              disabled={isMutating}
+              className="transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shrink-0"
+            >
+              <Plus className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
+              New task
+            </Button>
+          </div>
           {session?.user?.email && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {session.user.email}
             </p>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <GoogleCalendarButton />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="transition-all duration-300 hover:scale-105 active:scale-95"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-          <Button
-            onClick={() => setDialogOpen(true)}
-            disabled={isMutating}
-            className="transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shrink-0"
-          >
-            <Plus className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
-            New task
-          </Button>
         </div>
       </header>
 
