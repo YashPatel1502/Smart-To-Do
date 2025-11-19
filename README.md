@@ -144,6 +144,10 @@ Create `.env` (and `.env.example` for reference) with the following keys:
 
 _All providers above have generous free tiers suitable for this demo._
 
+### Supabase RLS
+
+This project connects to Supabase using a service-role connection string so Prisma/NextAuth can manage the `User`, `Account`, `Session`, and `VerificationToken` tables directly. Because Supabase's built-in `auth.uid()` is not used, we disable Row Level Security on `public."Account"` (see migration `20251120050500_disable_account_rls`). If you plan to expose the database via anon/auth roles or Supabase Auth, re-enable RLS and add the appropriate policies.
+
 ## Local development
 
 ```bash
