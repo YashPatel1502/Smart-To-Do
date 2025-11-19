@@ -46,9 +46,6 @@ const buildQueryString = (filters?: Partial<TaskFilters>) => {
   if (filters.search) {
     params.set("search", filters.search);
   }
-  if (typeof filters.showCompleted === "boolean") {
-    params.set("completed", String(filters.showCompleted));
-  }
   const query = params.toString();
   return query ? `?${query}` : "";
 };

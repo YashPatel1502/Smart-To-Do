@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import type { TaskFilters } from "@/types/task";
 import { taskPriorityOptions, taskStatusOptions } from "@/types/task";
 
@@ -28,7 +27,6 @@ const defaultState: TaskFilters = {
   status: "ALL",
   priority: "ALL",
   search: "",
-  showCompleted: false,
 };
 
 export function TaskFiltersBar({ filters, onChange, isLoading }: Props) {
@@ -52,7 +50,7 @@ export function TaskFiltersBar({ filters, onChange, isLoading }: Props) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-1.5">
         <div className="min-w-0 space-y-1.5">
           <Label className="text-sm font-semibold">Status</Label>
           <Select
@@ -112,19 +110,6 @@ export function TaskFiltersBar({ filters, onChange, isLoading }: Props) {
             disabled={isLoading}
             className="w-full"
           />
-        </div>
-
-        <div className="min-w-0 space-y-1.5">
-          <Label className="text-sm font-semibold">Show completed</Label>
-          <div className="flex w-full items-center justify-center rounded-md border px-3 py-2 h-9">
-            <Switch
-              checked={filters.showCompleted}
-              onCheckedChange={(checked) =>
-                onChange({ ...filters, showCompleted: checked })
-              }
-              disabled={isLoading}
-            />
-          </div>
         </div>
       </div>
     </div>

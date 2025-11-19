@@ -22,7 +22,7 @@ export const runtime = "nodejs";
  * GET /api/tasks
  * 
  * Retrieves tasks with optional query parameters for filtering.
- * Supports: status, priority, category, search, showCompleted
+ * Supports: status, priority, category, search
  * 
  * @returns JSON response with tasks array or error message
  */

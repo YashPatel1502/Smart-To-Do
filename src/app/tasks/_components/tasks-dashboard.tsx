@@ -30,7 +30,6 @@ const defaultFilters: TaskFilters = {
   status: "ALL",
   priority: "ALL",
   search: "",
-  showCompleted: false,
 };
 
 const emptyFormValues: TaskFormValues = {
@@ -63,7 +62,6 @@ export function TasksDashboard() {
       status: filters.status !== "ALL" ? filters.status : undefined,
       priority: filters.priority !== "ALL" ? filters.priority : undefined,
       search: filters.search || undefined,
-      showCompleted: filters.showCompleted,
     }),
     [filters]
   );
