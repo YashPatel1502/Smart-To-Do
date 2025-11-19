@@ -11,8 +11,7 @@ type Props = {
 };
 
 export function TaskSummary({ tasks }: Props) {
-  const completed = tasks.filter((task) => task.status === "COMPLETED").length;
-  const active = tasks.length - completed;
+  const active = tasks.filter((task) => task.status !== "COMPLETED").length;
 
   const dueSoon = tasks.filter((task) => {
     if (!task.dueDate || task.status === "COMPLETED") return false;
@@ -26,7 +25,7 @@ export function TaskSummary({ tasks }: Props) {
     {
       label: "Open tasks",
       value: active,
-      helper: `${completed} completed`,
+      helper: "Active work",
     },
     {
       label: "Due in 48h",
