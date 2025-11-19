@@ -2,6 +2,9 @@
   "name": "smart-todo",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "nodemailer": "^6.10.1"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
