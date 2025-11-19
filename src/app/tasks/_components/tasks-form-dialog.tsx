@@ -30,7 +30,7 @@ export function TaskFormDialog({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-2rem)] flex flex-col p-0">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-2rem)] flex flex-col p-0 top-4 translate-y-0 sm:top-[50%] sm:translate-y-[-50%]">
         <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle>
             {mode === "create" ? "Create a task" : "Update task"}
