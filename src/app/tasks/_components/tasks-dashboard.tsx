@@ -180,14 +180,6 @@ export function TasksDashboard() {
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
-            <Button
-              onClick={() => setDialogOpen(true)}
-              disabled={isMutating}
-              className="transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 shrink-0"
-            >
-              <Plus className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
-              New task
-            </Button>
           </div>
           {session?.user?.email && (
             <p className="text-xs text-muted-foreground">
@@ -200,7 +192,11 @@ export function TasksDashboard() {
       <AnimatedText className="py-2" speed={4000} tasks={tasks} />
 
       <div className="space-y-4">
-        <TaskSummary tasks={tasks} />
+        <TaskSummary 
+          tasks={tasks} 
+          onCreate={() => setDialogOpen(true)}
+          isMutating={isMutating}
+        />
 
         <TaskFiltersBar
           filters={filters}
