@@ -68,19 +68,7 @@ export function TasksDashboard() {
     [filters]
   );
 
-  // Fetch all tasks for summary (to show accurate counts)
-  const summaryFilters = useMemo(
-    () => ({
-      status: filters.status !== "ALL" ? filters.status : undefined,
-      priority: filters.priority !== "ALL" ? filters.priority : undefined,
-      search: filters.search || undefined,
-      showCompleted: true, // Always include completed for summary
-    }),
-    [filters]
-  );
-
   const { data: tasks = [], isLoading, isFetching } = useTasksQuery(queryFilters);
-  const { data: allTasksForSummary = [] } = useTasksQuery(summaryFilters);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -146,23 +134,14 @@ export function TasksDashboard() {
       } else {
         nextStatus = "PENDING";
       }
-      
-      // Explicitly preserve due date when marking as active
-      // This ensures the due date is not lost during the status update
-      updateTask.mutate({
-        id: task.id,
-        values: { 
-          status: nextStatus,
-          dueDate: task.dueDate, // Explicitly preserve due date
-        },
-      });
     } else {
       nextStatus = "COMPLETED";
-      updateTask.mutate({
-        id: task.id,
-        values: { status: nextStatus },
-      });
     }
+    
+    updateTask.mutate({
+      id: task.id,
+      values: { status: nextStatus },
+    });
   };
 
   const currentInitialValues: TaskFormValues = editingTask
@@ -225,7 +204,7 @@ export function TasksDashboard() {
       </div>
 
       <div className="space-y-4">
-        <TaskSummary tasks={allTasksForSummary} />
+        <TaskSummary tasks={tasks} />
 
         <TaskFiltersBar
           filters={filters}

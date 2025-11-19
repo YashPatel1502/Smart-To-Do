@@ -260,21 +260,13 @@ export const listTasks = async (query: URLSearchParams | TaskQuery, userId: stri
 export const createTask = async (payload: TaskPayload, userId: string, userEmail: string) => {
   try {
   const data = normalizePayload(payload);
-  
-  // Set completedAt if task is created as COMPLETED
-  const completedAt = data.status === "COMPLETED" ? new Date() : null;
-  
   const task = await prisma.task.create({
       data: {
         ...data,
         userId,
-        completedAt,
       },
   });
 
-  // Handle email and calendar for tasks with due dates
-  // Note: Even if task is COMPLETED, we still create calendar events and send emails
-  // as the user may have set a due date for tracking purposes
   if (task.dueDate) {
     // Send email notification (non-blocking)
     if (task.emailNotification) {
@@ -293,7 +285,6 @@ export const createTask = async (payload: TaskPayload, userId: string, userEmail
     }
 
     // Create calendar event (non-blocking)
-    // Create calendar event even for completed tasks if they have a due date
     if (task.calendarSync) {
       try {
       const eventId = await createCalendarEvent({
@@ -314,20 +305,6 @@ export const createTask = async (payload: TaskPayload, userId: string, userEmail
       } catch (error) {
         console.error("[tasks] Calendar sync failed, task still created", error);
       }
-    }
-  } else if (task.status === "COMPLETED" && task.emailNotification) {
-    // Send email notification even for completed tasks without due dates
-    try {
-      await sendTaskCreatedEmail({
-        title: task.title,
-        description: task.description ?? undefined,
-        dueDate: null,
-        priority: task.priority,
-        status: task.status,
-        category: task.category ?? undefined,
-      }, userEmail);
-    } catch (error) {
-      console.error("[tasks] Email notification failed, task still created", error);
     }
   }
 
