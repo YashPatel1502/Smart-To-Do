@@ -39,30 +39,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger }) {
-      if (user?.email) {
-        // Fetch user from database to get the ID
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.email = dbUser.email;
+      try {
+        if (user?.email) {
+          // Fetch user from database to get the ID
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.email = dbUser.email;
+          }
+        } else if (trigger === "update" && token.email) {
+          // Refresh user data if needed
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+          }
         }
-      } else if (trigger === "update" && token.email) {
-        // Refresh user data if needed
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-        }
+      } catch (error) {
+        console.error("[auth] JWT callback error:", error);
+        // Don't fail authentication if database query fails
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
+      try {
+        if (session.user) {
+          session.user.id = token.id as string;
+          session.user.email = token.email as string;
+        }
+      } catch (error) {
+        console.error("[auth] Session callback error:", error);
+        // Don't fail session creation if there's an error
       }
       return session;
     },
