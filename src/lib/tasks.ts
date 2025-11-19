@@ -12,7 +12,7 @@
 
 import { z } from "zod";
 
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import {
   sendTaskCreatedEmail,
@@ -45,12 +45,12 @@ const normalizePayload = (payload: Partial<TaskPayload>) => {
   }
 
   return {
-    title: payload.title,
-    description: payload.description ?? null,
+  title: payload.title,
+  description: payload.description ?? null,
     status: payload.status ?? "PENDING",
     priority: payload.priority ?? "MEDIUM",
-    category: payload.category ?? null,
-    dueDate: payload.dueDate ?? null,
+  category: payload.category ?? null,
+  dueDate: payload.dueDate ?? null,
     emailNotification: payload.emailNotification ?? true,
     calendarSync: payload.calendarSync ?? true,
   };
@@ -184,7 +184,7 @@ const syncCalendarAfterWrite = async (task: {
   }
 
   try {
-    if (task.calendarEventId) {
+  if (task.calendarEventId) {
       return await updateCalendarEvent(task.calendarEventId, {
         title: task.title,
         description: task.description ?? undefined,
@@ -221,17 +221,17 @@ const syncCalendarAfterWrite = async (task: {
  */
 export const listTasks = async (query: URLSearchParams | TaskQuery, userId: string) => {
   try {
-    const parsed =
-      query instanceof URLSearchParams
-        ? taskQuerySchema.parse(Object.fromEntries(query.entries()))
-        : query;
+  const parsed =
+    query instanceof URLSearchParams
+      ? taskQuerySchema.parse(Object.fromEntries(query.entries()))
+      : query;
 
     const where = buildWhereClause(parsed, userId);
 
     return await prisma.task.findMany({
-      where,
-      orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
-    });
+    where,
+    orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
+  });
   } catch (error) {
     // Re-throw validation errors
     if (error instanceof z.ZodError) {
@@ -259,48 +259,48 @@ export const listTasks = async (query: URLSearchParams | TaskQuery, userId: stri
  */
 export const createTask = async (payload: TaskPayload, userId: string, userEmail: string) => {
   try {
-    const data = normalizePayload(payload);
-    const task = await prisma.task.create({
+  const data = normalizePayload(payload);
+  const task = await prisma.task.create({
       data: {
         ...data,
         userId,
       },
-    });
+  });
 
   if (task.dueDate) {
     // Send email notification (non-blocking)
     if (task.emailNotification) {
       try {
-        await sendTaskCreatedEmail({
-          title: task.title,
-          description: task.description ?? undefined,
-          dueDate: task.dueDate,
-          priority: task.priority,
+      await sendTaskCreatedEmail({
+        title: task.title,
+        description: task.description ?? undefined,
+        dueDate: task.dueDate,
+        priority: task.priority,
           status: task.status,
           category: task.category ?? undefined,
         }, userEmail);
       } catch (error) {
         console.error("[tasks] Email notification failed, task still created", error);
-      }
+    }
     }
 
     // Create calendar event (non-blocking)
     if (task.calendarSync) {
       try {
-        const eventId = await createCalendarEvent({
-          title: task.title,
-          description: task.description ?? undefined,
-          dueDate: task.dueDate,
-          priority: task.priority,
-          taskId: task.id,
+      const eventId = await createCalendarEvent({
+        title: task.title,
+        description: task.description ?? undefined,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        taskId: task.id,
           userId,
-        });
+      });
 
-        if (eventId) {
-          return prisma.task.update({
-            where: { id: task.id },
-            data: { calendarEventId: eventId },
-          });
+      if (eventId) {
+        return prisma.task.update({
+          where: { id: task.id },
+          data: { calendarEventId: eventId },
+        });
         }
       } catch (error) {
         console.error("[tasks] Calendar sync failed, task still created", error);
@@ -308,7 +308,7 @@ export const createTask = async (payload: TaskPayload, userId: string, userEmail
     }
   }
 
-    return task;
+  return task;
   } catch (error) {
     // Handle Prisma errors
     console.error("[tasks] Failed to create task", error);
@@ -337,20 +337,20 @@ export const createTask = async (payload: TaskPayload, userId: string, userEmail
  */
 export const updateTask = async (payload: TaskUpdatePayload, userId: string, userEmail: string) => {
   try {
-    const existing = await prisma.task.findUnique({
-      where: { id: payload.id },
-    });
+  const existing = await prisma.task.findUnique({
+    where: { id: payload.id },
+  });
 
-    if (!existing) {
-      throw new Error("Task not found");
-    }
+  if (!existing) {
+    throw new Error("Task not found");
+  }
 
     // Verify task belongs to user
     if (existing.userId !== userId) {
       throw new Error("Unauthorized");
     }
 
-    const completedAt = computeCompletedAt(existing.status, payload.status);
+  const completedAt = computeCompletedAt(existing.status, payload.status);
     
     // Store previous status when marking as completed (for restoration)
     let previousStatus = existing.previousStatus;
@@ -362,17 +362,17 @@ export const updateTask = async (payload: TaskUpdatePayload, userId: string, use
       previousStatus = null;
     }
 
-    const updated = await prisma.task.update({
-      where: { id: payload.id },
-      data: {
+  const updated = await prisma.task.update({
+    where: { id: payload.id },
+    data: {
         ...normalizePartialPayload(payload),
         previousStatus,
-        completedAt:
-          typeof completedAt === "undefined"
-            ? existing.completedAt
-            : completedAt,
-      },
-    });
+      completedAt:
+        typeof completedAt === "undefined"
+          ? existing.completedAt
+          : completedAt,
+    },
+  });
 
   let nextTask = updated;
 
@@ -383,12 +383,12 @@ export const updateTask = async (payload: TaskUpdatePayload, userId: string, use
         ...updated,
         userId: updated.userId,
       });
-      if (eventId && eventId !== updated.calendarEventId) {
-        nextTask = await prisma.task.update({
-          where: { id: updated.id },
-          data: { calendarEventId: eventId },
-        });
-      }
+    if (eventId && eventId !== updated.calendarEventId) {
+      nextTask = await prisma.task.update({
+        where: { id: updated.id },
+        data: { calendarEventId: eventId },
+      });
+    }
     } catch (error) {
       console.error("[tasks] Calendar sync failed, task still updated", error);
     }
@@ -408,7 +408,7 @@ export const updateTask = async (payload: TaskUpdatePayload, userId: string, use
 
   // Send email notification for all updates (non-blocking)
   // Ensures emails are sent for ANY update: priority change, status change, description change, etc.
-  if (nextTask.emailNotification) {
+    if (nextTask.emailNotification) {
     try {
       await sendTaskUpdatedEmail({
         title: nextTask.title,
@@ -458,8 +458,8 @@ export const deleteTask = async (id: string, userId: string, userEmail: string) 
 
     // Fetch task data before deleting so we can send email notification
     const task = await prisma.task.findUnique({
-      where: { id },
-    });
+    where: { id },
+  });
 
     if (!task) {
       throw new Error("Task not found");

@@ -33,7 +33,7 @@ dist/
 # Prisma
 # ============================================
 # Generated Prisma Client (regenerated on install)
-/src/generated/prisma/
+# Using default location now, so no need to ignore custom path
 prisma/migrations/*.sql
 
 # ============================================
