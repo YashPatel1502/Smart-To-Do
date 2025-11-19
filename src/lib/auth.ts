@@ -67,9 +67,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // After successful authentication, redirect to /tasks
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
+      // After successful authentication, always redirect to /tasks
+      // Handle both relative and absolute URLs
+      if (url.startsWith("/")) {
+        // If it's /tasks or a valid path, use it
+        if (url === "/tasks" || url.startsWith("/tasks")) {
+          return `${baseUrl}${url}`;
+        }
+        // Otherwise default to /tasks
+        return `${baseUrl}/tasks`;
+      }
+      // If it's an absolute URL from the same origin, extract the path
+      try {
+        const urlObj = new URL(url);
+        if (urlObj.origin === baseUrl) {
+          return urlObj.pathname === "/tasks" || urlObj.pathname.startsWith("/tasks") 
+            ? url 
+            : `${baseUrl}/tasks`;
+        }
+      } catch {
+        // Invalid URL, default to /tasks
+      }
       return `${baseUrl}/tasks`;
     },
   },
