@@ -40,17 +40,34 @@ function LoginForm() {
   const handleSendMagicLink = async (values: EmailFormValues) => {
     setIsLoading(true);
     try {
-      await signIn("email", {
+      const result = await signIn("email", {
         email: values.email,
         redirect: false,
         callbackUrl,
       });
       
+      // Check if there was an error
+      if (result?.error) {
+        console.error("[login] SignIn error:", result.error);
+        toast.error(
+          result.error === "Configuration"
+            ? "Server configuration error. Please check your environment variables."
+            : "Failed to send magic link. Please try again."
+        );
+        return;
+      }
+      
       setEmailSent(true);
       setSentEmail(values.email);
       toast.success("Magic link sent! Check your email.");
     } catch (error) {
-      toast.error("Failed to send magic link. Please try again.");
+      console.error("[login] Magic link error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(
+        errorMessage.includes("database") || errorMessage.includes("connection")
+          ? "Database connection error. Please check your database settings."
+          : "Failed to send magic link. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
