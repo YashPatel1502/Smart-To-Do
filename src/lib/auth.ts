@@ -38,11 +38,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn() {
-      // Always allow sign in - PrismaAdapter handles user creation automatically
-      // This ensures the magic link flow works even if there are minor database issues
-      return true;
-    },
     async jwt({ token, user, trigger }) {
       try {
         if (user?.email) {

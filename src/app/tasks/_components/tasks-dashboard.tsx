@@ -58,11 +58,27 @@ export function TasksDashboard() {
   };
 
   const queryFilters = useMemo(
-    () => ({
-      status: filters.status !== "ALL" ? filters.status : undefined,
-      priority: filters.priority !== "ALL" ? filters.priority : undefined,
-      search: filters.search || undefined,
-    }),
+    () => {
+      const result: {
+        status?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+        priority?: "LOW" | "MEDIUM" | "HIGH";
+        search?: string;
+      } = {};
+      
+      if (filters.status && filters.status !== "ALL") {
+        result.status = filters.status as "PENDING" | "IN_PROGRESS" | "COMPLETED";
+      }
+      
+      if (filters.priority && filters.priority !== "ALL") {
+        result.priority = filters.priority as "LOW" | "MEDIUM" | "HIGH";
+      }
+      
+      if (filters.search) {
+        result.search = filters.search;
+      }
+      
+      return result;
+    },
     [filters]
   );
 
