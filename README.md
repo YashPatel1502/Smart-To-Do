@@ -222,7 +222,8 @@ Record a 2–5 minute Loom covering:
 ## Documentation
 
 - **`README.md`**: This file - setup, architecture, deployment, assumptions, limitations
-- **`ENV_SETUP.md`**: Step-by-step environment variable setup guide for database, SendGrid, and Google Calendar
+- **`DEPLOYMENT_GUIDE.md`**: Step-by-step deployment guide for GitHub and Vercel
+- **`GITHUB_SETUP.md`**: GitHub repository setup instructions
 
 ---
 
