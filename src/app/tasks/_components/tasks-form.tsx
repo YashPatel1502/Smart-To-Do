@@ -337,7 +337,7 @@ export function TaskForm({ initialValues, onSubmit, isSubmitting }: Props) {
                 <div className="space-y-1">
                   <FormLabel>Email alert</FormLabel>
                   <p className="text-sm text-muted-foreground">
-                    Send a SendGrid email when the task is created.
+                    Send an email notification when the task is created.
                   </p>
                 </div>
                 <FormControl>

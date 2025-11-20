@@ -1,20 +1,15 @@
 /**
  * Magic Link Email Service
  * 
- * Sends magic link authentication emails via SendGrid
+ * Sends magic link authentication emails via Gmail API
  * 
  * @module lib/email-auth
  */
 
-import sgMail from "@sendgrid/mail";
+import { sendGmail, gmailConfigured } from "./gmail";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-}
+const GMAIL_USER = process.env.GMAIL_USER;
 
 type MagicLinkEmailParams = {
   email: string;
@@ -22,10 +17,12 @@ type MagicLinkEmailParams = {
 };
 
 export const sendMagicLinkEmail = async ({ email, url }: MagicLinkEmailParams) => {
-  if (!SENDGRID_API_KEY || !EMAIL_FROM) {
+  if (!gmailConfigured || !EMAIL_FROM || !GMAIL_USER) {
     console.warn(
-      "[email-auth] Missing SENDGRID configuration. Magic link email not sent."
+      "[email-auth] Missing Gmail configuration. Magic link email not sent."
     );
+    console.warn("[email-auth] Gmail configured:", gmailConfigured);
+    console.warn("[email-auth] EMAIL_FROM:", EMAIL_FROM || "Missing");
     // In development, log the URL instead
     if (process.env.NODE_ENV === "development") {
       console.log("[email-auth] Magic link URL:", url);
@@ -70,17 +67,17 @@ ${url}
 If you didn't request this email, you can safely ignore it.
     `.trim();
 
-    await sgMail.send({
+    await sendGmail({
       to: email,
-      from: EMAIL_FROM,
       subject: "Sign in to Smart To-Do",
       text: emailText,
       html: emailHtml,
     });
 
     console.log(`[email-auth] Magic link sent to ${email}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error("[email-auth] Failed to send magic link email", error);
+    
     throw error;
   }
 };

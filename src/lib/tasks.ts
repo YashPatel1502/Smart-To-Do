@@ -3,7 +3,7 @@
  * 
  * Core business logic for task CRUD operations, including:
  * - Database operations via Prisma ORM
- * - Email notifications via SendGrid
+ * - Email notifications via Gmail API
  * - Calendar event synchronization via Google Calendar API
  * - Status management and completion tracking
  * 

@@ -20,16 +20,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     EmailProvider({
       // Minimal server config (required by NextAuth but not used since we override sendVerificationRequest)
       server: {
-        host: "smtp.sendgrid.net",
+        host: "smtp.gmail.com",
         port: 587,
         auth: {
-          user: "apikey",
-          pass: process.env.SENDGRID_API_KEY || "",
+          user: process.env.GMAIL_USER || "",
+          pass: process.env.GMAIL_APP_PASSWORD || "",
         },
       },
       from: process.env.EMAIL_FROM || "noreply@example.com",
       sendVerificationRequest: async ({ identifier, url }) => {
-        // Use our custom SendGrid email sending
+        // Use our custom Gmail API email sending
         await sendMagicLinkEmail({
           email: identifier,
           url,

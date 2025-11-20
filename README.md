@@ -1,6 +1,6 @@
 # Smart To-Do
 
-Production-ready smart to-do list that showcases architecture, integrations, and UI polish for the Ennabl technical assignment. Built with Next.js App Router, Prisma, PostgreSQL, SendGrid, and Google Calendar so it can be deployed on Vercel with zero paid services.
+Production-ready smart to-do list that showcases architecture, integrations, and UI polish for the Ennabl technical assignment. Built with Next.js App Router, Prisma, PostgreSQL, Gmail API, and Google Calendar so it can be deployed on Vercel with zero paid services.
 
 ## 🚀 Development Approach
 
@@ -17,7 +17,7 @@ This project was built using **AI-assisted development tools** (primarily Cursor
 - **Framework**: Next.js 16 (App Router) + React 19 + TypeScript
 - **Styling/UI**: Tailwind CSS v4, shadcn/ui, lucide-react icons
 - **State/Data**: React Query for server state, React Hook Form + Zod for forms, Prisma ORM on PostgreSQL (Supabase/Neon compatible)
-- **Integrations**: SendGrid email notifications, Google Calendar API events
+- **Integrations**: Gmail API email notifications, Google Calendar API events
 - **Tooling**: ESLint 9, React Query Devtools, tsx for scripts
 
 ## Features
@@ -92,7 +92,7 @@ prisma/
 - Automatic cache invalidation on mutations
 
 **Integrations (Practical API Integrations)**
-- **Email** (`/lib/email.ts`): Real SendGrid API integration with API key authentication, sends actual emails
+- **Email** (`/lib/email.ts`): Real Gmail API integration using OAuth2 + refresh tokens, sends actual emails
 - **Calendar** (`/lib/calendar.ts`): Real Google Calendar API integration with OAuth 2.0, creates/updates/deletes actual calendar events
 - Both integrations are **non-blocking** (failures don't break core functionality) and **production-ready** (comprehensive error handling)
 
@@ -133,9 +133,12 @@ Create `.env` (and `.env.example` for reference) with the following keys:
 | Variable | Description |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string (Supabase, Neon, local, etc.) |
-| `SENDGRID_API_KEY` | SendGrid API key (free tier 100 emails/day) |
-| `EMAIL_FROM` | Verified sender email in SendGrid |
-| `NOTIFICATION_EMAIL` | Recipient email (can match `EMAIL_FROM`) |
+| `GMAIL_USER` | Gmail address that will send emails (e.g., `you@gmail.com`) |
+| `GMAIL_CLIENT_ID` | OAuth 2.0 Client ID from Google Cloud Console |
+| `GMAIL_CLIENT_SECRET` | OAuth 2.0 Client Secret |
+| `GMAIL_REFRESH_TOKEN` | Refresh token obtained via the Gmail auth helper script |
+| `GMAIL_APP_PASSWORD` | Optional: only used for the unused SMTP stub required by NextAuth |
+| `EMAIL_FROM` | Same as `GMAIL_USER` (or alias configured in Gmail) |
 | `GOOGLE_CLIENT_ID` | OAuth client ID for Google Cloud project |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret |
 | `GOOGLE_REFRESH_TOKEN` | Refresh token with `https://www.googleapis.com/auth/calendar` scope |
@@ -143,6 +146,24 @@ Create `.env` (and `.env.example` for reference) with the following keys:
 | `NEXT_PUBLIC_APP_URL` | Base URL for the deployed app (used in emails if needed) |
 
 _All providers above have generous free tiers suitable for this demo._
+
+### Gmail API configuration
+
+1. Create a Google Cloud project (or reuse an existing one) and enable the **Gmail API**.
+2. Go to **APIs & Services → Credentials** and create an **OAuth Client ID** (Desktop app is fine for personal use).
+3. Copy the Client ID/Secret into `.env` as `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`.
+4. Generate a refresh token by running the helper script:
+   ```bash
+   GMAIL_CLIENT_ID=xxx \
+   GMAIL_CLIENT_SECRET=yyy \
+   npx tsx scripts/gmail-auth.ts
+   ```
+   - The script prints an authorization URL. Open it in a browser, log in with the Gmail account that should send emails, and approve the `gmail.send` scope.
+   - Paste the verification code back into the terminal. The script outputs `refresh_token=...`. Save that value as `GMAIL_REFRESH_TOKEN`.
+5. Set `GMAIL_USER` and `EMAIL_FROM` to the Gmail address that completed the consent flow (e.g., `yashpatel150201@gmail.com`).
+6. Deploy the updated environment variables to Vercel and redeploy the app.
+
+> **Limits:** Personal Gmail accounts can send roughly 100 messages/day via the API. For higher limits, use Google Workspace.
 
 ### Supabase RLS
 
@@ -202,7 +223,7 @@ npm run lint
 
 1. Push the repo to GitHub.
 2. Create a PostgreSQL database (Supabase/Neon) and copy the connection string.
-3. Provision SendGrid + Google credentials, populate Vercel project environment variables.
+3. Provision Gmail API + Google Calendar credentials, populate Vercel project environment variables.
 4. Import the repo in Vercel, select the Next.js framework preset, and deploy.
 5. After deployment, run `npm run prisma:migrate` (locally or via Vercel CLI) so the remote DB schema matches.
 
@@ -231,12 +252,12 @@ Record a 2–5 minute Loom covering:
 ### Trade-offs
 - **Speed vs. Perfection**: Focused on core requirements and quality over perfection
 - **Simplicity vs. Features**: Chose simple, working solutions over complex features
-- **Free Services**: All services use free tiers (Supabase, SendGrid, Google Calendar, Vercel)
+- **Free Services**: All services use free tiers (Supabase, Gmail API, Google Calendar, Vercel)
 
 ## Future enhancements
 
 - Multi-user auth with Clerk/Supabase Auth (schema already supports `userId`)
-- Task reminders/notifications closer to due dates (cron or Resend scheduled emails)
+- Task reminders/notifications closer to due dates (cron or Gmail scheduled emails)
 - Rich calendar syncing (bi-directional updates, event attendees)
 - Analytics panel (burn-down charts, per-category velocity)
 - HTML email templates with better formatting

@@ -1,7 +1,7 @@
 /**
  * Email Notification Service
  * 
- * Handles sending email notifications via SendGrid for task lifecycle events:
+ * Handles sending email notifications via Gmail API for task lifecycle events:
  * - Task creation
  * - Task updates (any field change)
  * - Task deletion
@@ -11,16 +11,9 @@
  * @module lib/email
  */
 
-import sgMail from "@sendgrid/mail";
+import { sendGmail, gmailConfigured } from "./gmail";
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM;
-const NOTIFICATION_EMAIL =
-  process.env.NOTIFICATION_EMAIL ?? process.env.EMAIL_FROM;
-
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-}
 
 type TaskEmailPayload = {
   title: string;
@@ -44,10 +37,8 @@ const sendEmail = async (
   payload: TaskEmailPayload,
   userEmail: string
 ) => {
-  if (!SENDGRID_API_KEY || !EMAIL_FROM) {
-    console.warn(
-      "[email] Missing SENDGRID configuration. Skipping email delivery."
-    );
+  if (!gmailConfigured || !EMAIL_FROM) {
+    console.warn("[email] Missing Gmail configuration. Skipping email delivery.");
     return;
   }
 
@@ -75,9 +66,8 @@ const sendEmail = async (
       .filter(Boolean)
       .join("\n");
 
-    await sgMail.send({
-      to: userEmail, // Send to the user's email
-      from: EMAIL_FROM,
+    await sendGmail({
+      to: userEmail,
       subject,
       text: emailBody,
     });
