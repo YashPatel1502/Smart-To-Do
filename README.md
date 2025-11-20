@@ -463,7 +463,6 @@ Or run migrations directly on the production database using the connection strin
 
 ## 📚 Additional Documentation
 
-- **`LOOM_VIDEO_SCRIPT.md`**: Script for video walkthrough demonstration
 - **`scripts/gmail-auth.ts`**: Helper script for Gmail OAuth token generation
 
 ## 🤝 Contributing
