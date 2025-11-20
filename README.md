@@ -1,275 +1,479 @@
 # Smart To-Do
 
-Production-ready smart to-do list that showcases architecture, integrations, and UI polish for the Ennabl technical assignment. Built with Next.js App Router, Prisma, PostgreSQL, Gmail API, and Google Calendar so it can be deployed on Vercel with zero paid services.
+A production-ready smart to-do list application built with Next.js, featuring email notifications via Gmail API and Google Calendar integration. Designed to showcase modern full-stack development practices with clean architecture, type safety, and comprehensive error handling.
 
-## 🚀 Development Approach
+## 📋 Table of Contents
 
-This project was built using **AI-assisted development tools** (primarily Cursor with Claude Code) to accelerate development while maintaining high code quality. The focus was on:
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Architecture](#architecture)
+- [Deployment](#deployment)
+- [Assumptions & Limitations](#assumptions--limitations)
+- [Future Enhancements](#future-enhancements)
 
-- **Rapid iteration** with modern tooling
-- **Production-ready code** with comprehensive error handling
-- **Clean architecture** for maintainability
-- **Practical problem-solving** within reasonable constraints (free services, 3-day timeline)
+## 🎯 Overview
 
+This application demonstrates a production-ready task management system with:
+- **Magic link authentication** using NextAuth.js
+- **Email notifications** via Gmail API (OAuth2)
+- **Google Calendar integration** for automatic event creation/updates
+- **Real-time UI** with optimistic updates using React Query
+- **Type-safe** codebase with TypeScript and Zod validation
+- **Responsive design** that works on all devices
 
-## Tech stack
+Built as a technical assignment showcasing modern development practices, clean code organization, and practical API integrations.
 
-- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript
-- **Styling/UI**: Tailwind CSS v4, shadcn/ui, lucide-react icons
-- **State/Data**: React Query for server state, React Hook Form + Zod for forms, Prisma ORM on PostgreSQL (Supabase/Neon compatible)
-- **Integrations**: Gmail API email notifications, Google Calendar API events
-- **Tooling**: ESLint 9, React Query Devtools, tsx for scripts
+## ✨ Features
 
-## Features
+### Core Functionality
+- ✅ **CRUD Operations**: Create, read, update, and delete tasks
+- ✅ **Task Properties**: Title, description, status, priority, category, due date/time
+- ✅ **Filtering & Search**: Filter by status, priority, category, and search by text
+- ✅ **Task Status Management**: Pending, In Progress, Completed with status transitions
 
-- CRUD tasks with title, description, status, priority, category, due date
-- Toggle email + calendar automations per task
-- Calendar event lifecycle (create/update/delete) with stored `calendarEventId`
-- Responsive dashboard with filters, status/priority badges, summaries, dialogs
-- Real-time UX powered by React Query hooks with optimistic UI feedback
-- Prisma schema + migrations + seed script for easy onboarding
+### Integrations
+- 📧 **Email Notifications**: Automatic emails for task creation, updates, and deletions via Gmail API
+- 📅 **Calendar Sync**: Automatic Google Calendar event creation/updates when tasks have due dates
+- 🔐 **Authentication**: Passwordless magic link authentication
 
-## Project structure
+### User Experience
+- 🎨 **Modern UI**: Built with Tailwind CSS and shadcn/ui components
+- 📱 **Responsive Design**: Mobile-first approach, works on all screen sizes
+- ⚡ **Optimistic Updates**: Instant UI feedback with background synchronization
+- 🔄 **Real-time State**: React Query for efficient data fetching and caching
+- 🎭 **Loading States**: Skeletons, spinners, and disabled states during operations
+- 🚨 **Error Handling**: Comprehensive error messages and graceful degradation
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS v4, shadcn/ui components
+- **State Management**: React Query (TanStack Query) for server state
+- **Forms**: React Hook Form + Zod for validation
+- **Icons**: Lucide React
+
+### Backend
+- **Runtime**: Node.js (via Next.js API routes)
+- **Database**: PostgreSQL (Supabase/Neon compatible)
+- **ORM**: Prisma
+- **Authentication**: NextAuth.js v5 (Email provider)
+
+### Integrations
+- **Email**: Gmail API (OAuth2 with refresh tokens)
+- **Calendar**: Google Calendar API (OAuth2)
+
+### Development Tools
+- **Language**: TypeScript
+- **Linting**: ESLint 9
+- **Package Manager**: npm
+- **Script Runner**: tsx
+
+## 📁 Project Structure
 
 ```
-src/
-  app/
-    api/tasks/            # Route handlers (POST/GET + PATCH/DELETE)
-    tasks/                # Dashboard route + UI components
-  components/
-    providers/            # React Query + toaster providers
-    ui/                   # shadcn components
-  hooks/                  # React Query hooks
-  lib/                    # Prisma client, services, integrations, validation
-  types/                  # Shared Task types/enums
-prisma/
-  schema.prisma           # Task model + enums
-  migrations/             # SQL migration (generated via prisma migrate diff)
-  seed.ts                 # Sample data seeding script
+smart-todo/
+├── prisma/
+│   ├── schema.prisma          # Database schema and models
+│   ├── migrations/             # Database migration files
+│   └── seed.ts                # Sample data seeding script
+├── scripts/
+│   └── gmail-auth.ts          # Helper script to generate Gmail refresh token
+├── src/
+│   ├── app/
+│   │   ├── api/               # API route handlers
+│   │   │   ├── auth/         # Authentication routes (NextAuth)
+│   │   │   ├── tasks/         # Task CRUD endpoints
+│   │   │   └── user/          # User-related endpoints (calendar)
+│   │   ├── login/             # Login page and verification
+│   │   ├── tasks/              # Main dashboard
+│   │   │   └── _components/   # Task-related components
+│   │   └── layout.tsx         # Root layout
+│   ├── components/
+│   │   ├── providers/         # React Query, Session, Toast providers
+│   │   └── ui/                # Reusable UI components (shadcn)
+│   ├── hooks/
+│   │   └── use-tasks.ts       # React Query hooks for tasks
+│   ├── lib/
+│   │   ├── auth.ts            # NextAuth configuration
+│   │   ├── calendar.ts        # Google Calendar integration
+│   │   ├── email.ts            # Task notification emails
+│   │   ├── email-auth.ts       # Magic link email sending
+│   │   ├── gmail.ts            # Gmail API client
+│   │   ├── prisma.ts           # Prisma client singleton
+│   │   ├── tasks.ts            # Core task business logic
+│   │   ├── utils.ts            # Utility functions
+│   │   └── validations.ts      # Zod schemas
+│   └── types/
+│       ├── task.ts             # Task type definitions
+│       └── next-auth.d.ts      # NextAuth type extensions
+├── .env.example               # Environment variables template
+├── package.json
+└── README.md
 ```
 
-## Code organization & architecture
+### Key Directories Explained
 
-### Design principles
+**`/src/app/api/`** - API Route Handlers
+- HTTP request/response handling
+- Input validation with Zod
+- Error handling and status codes
+- Authentication checks
 
-**1. Separation of concerns**
-- **API Layer** (`/app/api/`): HTTP request/response handling, validation, error formatting
-- **Business Logic** (`/lib/`): Core task operations, integrations (email, calendar), database queries
-- **UI Layer** (`/app/tasks/`, `/components/`): React components, user interactions, state management
-- **Data Layer** (`/hooks/`): React Query hooks for server state, caching, mutations
+**`/src/lib/`** - Business Logic Layer
+- `tasks.ts`: Core CRUD operations, orchestrates email/calendar integrations
+- `gmail.ts`: Gmail API client for sending emails
+- `calendar.ts`: Google Calendar API integration
+- `email.ts`: Email notification service
+- `auth.ts`: NextAuth.js configuration
 
-**2. Feature-based organization**
-- Task-related components are co-located in `/app/tasks/_components/`
-- Related functionality grouped together for easy navigation
-- Clear naming conventions (e.g., `tasks-dashboard.tsx`, `tasks-form.tsx`)
+**`/src/app/tasks/_components/`** - Feature Components
+- Co-located task-related UI components
+- Dashboard, form, list, filters, summary
 
-**3. Type safety first**
-- TypeScript types defined in `/types/` before implementation
+**`/src/hooks/`** - Data Fetching
+- React Query hooks for server state
+- Optimistic updates and cache management
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- PostgreSQL database (Supabase, Neon, or local)
+- Google Cloud project with Gmail API and Google Calendar API enabled
+- Gmail account for sending emails
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd smart-todo
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Then fill in all required values (see [Configuration](#configuration) section).
+
+4. **Set up the database**
+   ```bash
+   # Generate Prisma client
+   npm run prisma:generate
+
+   # Run migrations
+   npm run prisma:migrate
+
+   # (Optional) Seed sample data
+   npm run db:seed
+   ```
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to `http://localhost:3000` and start using the app!
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+#### Database
+```env
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+
+#### Gmail API (for email notifications)
+```env
+GMAIL_USER=your-email@gmail.com
+GMAIL_CLIENT_ID=your-oauth-client-id
+GMAIL_CLIENT_SECRET=your-oauth-client-secret
+GMAIL_REFRESH_TOKEN=your-refresh-token
+EMAIL_FROM=your-email@gmail.com
+```
+
+#### Google Calendar API
+```env
+GOOGLE_CLIENT_ID=your-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-oauth-client-secret
+GOOGLE_REFRESH_TOKEN=your-refresh-token
+GOOGLE_CALENDAR_ID=primary
+```
+
+#### NextAuth.js
+```env
+NEXTAUTH_SECRET=your-random-secret-key
+NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Gmail API Setup
+
+1. **Create Google Cloud Project**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+
+2. **Enable Gmail API**
+   - Navigate to **APIs & Services → Library**
+   - Search for "Gmail API" and enable it
+
+3. **Configure OAuth Consent Screen**
+   - Go to **APIs & Services → OAuth consent screen**
+   - Choose "External" user type
+   - Fill in app information
+   - Add your Gmail address as a test user
+
+4. **Create OAuth Credentials**
+   - Go to **APIs & Services → Credentials**
+   - Click **Create Credentials → OAuth client ID**
+   - Choose **Desktop app** as application type
+   - Copy the Client ID and Client Secret
+
+5. **Generate Refresh Token**
+   ```bash
+   GMAIL_CLIENT_ID=your-client-id \
+   GMAIL_CLIENT_SECRET=your-client-secret \
+   npx tsx scripts/gmail-auth.ts
+   ```
+   - Open the authorization URL in your browser
+   - Sign in with the Gmail account you want to use
+   - Approve the permissions
+   - Copy the verification code and paste it in the terminal
+   - Save the printed refresh token to your `.env` file
+
+6. **Set Gmail User**
+   - Set `GMAIL_USER` and `EMAIL_FROM` to the Gmail address you used
+
+> **Note**: Personal Gmail accounts have a limit of ~100 emails/day via the API. For higher limits, use Google Workspace.
+
+### Google Calendar API Setup
+
+1. **Enable Google Calendar API**
+   - In the same Google Cloud project, enable "Google Calendar API"
+
+2. **Create OAuth Credentials** (separate from Gmail)
+   - Create another OAuth client ID (can be Web application type)
+   - Use the OAuth 2.0 Playground or similar tool to get a refresh token with `https://www.googleapis.com/auth/calendar` scope
+
+3. **Set Calendar ID**
+   - Use `primary` for the default calendar, or a specific calendar ID
+
+### Database Setup
+
+#### Using Supabase
+
+1. Create a new Supabase project
+2. Go to **Settings → Database**
+3. Copy the connection string
+4. For connection pooling (recommended for serverless):
+   - Select **Connection pooling** mode
+   - Choose **Session** mode (NOT Transaction mode)
+   - The connection string should include `?pgbouncer=true` and use port `6543`
+
+#### Using Neon or Other PostgreSQL
+
+1. Create a PostgreSQL database
+2. Copy the connection string
+3. Use it as `DATABASE_URL`
+
+## 🏗 Architecture
+
+### Design Principles
+
+#### 1. Separation of Concerns
+- **API Layer** (`/app/api/`): HTTP handling, validation, error formatting
+- **Business Logic** (`/lib/`): Core operations, integrations, database queries
+- **UI Layer** (`/app/tasks/`, `/components/`): React components, user interactions
+- **Data Layer** (`/hooks/`): React Query hooks for server state
+
+#### 2. Feature-Based Organization
+- Related components co-located in feature directories
+- Clear naming conventions
+- Easy to navigate and maintain
+
+#### 3. Type Safety First
+- TypeScript throughout
 - Zod schemas for runtime validation
-- Prisma generates types from schema
+- Prisma-generated types from schema
 
-**4. Integration isolation**
-- Email service (`/lib/email.ts`) - isolated, non-blocking
-- Calendar service (`/lib/calendar.ts`) - isolated, non-blocking
+#### 4. Integration Isolation
+- Email and calendar services are isolated modules
 - Failures don't break core functionality (graceful degradation)
+- Non-blocking error handling
 
-### Key files explained
+### Key Components
 
-**Business Logic (`/lib/tasks.ts`)**
-- `listTasks()`: Query tasks with filters (status, priority, category, search)
-- `createTask()`: Create task + trigger email/calendar integrations
-- `updateTask()`: Update task + sync calendar events + send email notifications
-- `deleteTask()`: Delete task + cleanup calendar events + send deletion email
+#### Business Logic (`/lib/tasks.ts`)
+- `listTasks()`: Query tasks with filters
+- `createTask()`: Create task + trigger email/calendar
+- `updateTask()`: Update task + sync calendar + send email
+- `deleteTask()`: Delete task + cleanup calendar + send email
 
-**API Routes (`/app/api/tasks/`)**
+#### API Routes (`/app/api/tasks/`)
 - `route.ts`: GET (list), POST (create)
 - `[taskId]/route.ts`: PATCH (update), DELETE (delete)
-- All routes include: validation, error handling, proper HTTP status codes
+- All routes include validation, error handling, proper HTTP status codes
 
-**React Hooks (`/hooks/use-tasks.ts`)**
+#### React Hooks (`/hooks/use-tasks.ts`)
 - `useTasksQuery()`: Fetch tasks with React Query caching
 - `useCreateTask()`, `useUpdateTask()`, `useDeleteTask()`: Mutations with optimistic updates
-- Automatic cache invalidation on mutations
+- Automatic cache invalidation
 
-**Integrations (Practical API Integrations)**
-- **Email** (`/lib/email.ts`): Real Gmail API integration using OAuth2 + refresh tokens, sends actual emails
-- **Calendar** (`/lib/calendar.ts`): Real Google Calendar API integration with OAuth 2.0, creates/updates/deletes actual calendar events
-- Both integrations are **non-blocking** (failures don't break core functionality) and **production-ready** (comprehensive error handling)
+#### Integrations
+- **Gmail API** (`/lib/gmail.ts`): OAuth2 client, message encoding, sending
+- **Calendar API** (`/lib/calendar.ts`): OAuth2 client, event CRUD operations
+- Both are non-blocking and production-ready
 
-### Error handling strategy
+### Error Handling Strategy
 
-**1. API Level**
+**API Level**
 - Try-catch blocks in all route handlers
 - Zod validation for input sanitization
 - User-friendly error messages
 - Proper HTTP status codes (400, 404, 500)
 
-**2. Integration Level**
+**Integration Level**
 - Non-blocking: Email/calendar failures don't prevent task operations
 - Try-catch around all integration calls
 - Console logging for debugging
 - Graceful fallbacks when services unavailable
 
-**3. UI Level**
+**UI Level**
 - Toast notifications for user feedback
 - Loading states during mutations
 - Form validation with inline error messages
 - Disabled states during operations
 
-### UX quality features
+## 🚢 Deployment
 
-- **Loading states**: Skeletons, spinners, disabled buttons
-- **Empty states**: Helpful messages when no tasks exist
-- **Error feedback**: Toast notifications with clear messages
-- **Optimistic updates**: UI updates immediately, syncs in background
-- **Responsive design**: Mobile-first, works on all screen sizes
-- **Animations**: Smooth transitions, hover effects, fade-ins
-- **Accessibility**: Proper ARIA labels, keyboard navigation
+### Vercel Deployment
 
-## Environment variables
-
-Create `.env` (and `.env.example` for reference) with the following keys:
-
-| Variable | Description |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string (Supabase, Neon, local, etc.) |
-| `GMAIL_USER` | Gmail address that will send emails (e.g., `you@gmail.com`) |
-| `GMAIL_CLIENT_ID` | OAuth 2.0 Client ID from Google Cloud Console |
-| `GMAIL_CLIENT_SECRET` | OAuth 2.0 Client Secret |
-| `GMAIL_REFRESH_TOKEN` | Refresh token obtained via the Gmail auth helper script |
-| `GMAIL_APP_PASSWORD` | Optional: only used for the unused SMTP stub required by NextAuth |
-| `EMAIL_FROM` | Same as `GMAIL_USER` (or alias configured in Gmail) |
-| `GOOGLE_CLIENT_ID` | OAuth client ID for Google Cloud project |
-| `GOOGLE_CLIENT_SECRET` | OAuth client secret |
-| `GOOGLE_REFRESH_TOKEN` | Refresh token with `https://www.googleapis.com/auth/calendar` scope |
-| `GOOGLE_CALENDAR_ID` | Calendar ID to create events in (e.g., `primary`) |
-| `NEXT_PUBLIC_APP_URL` | Base URL for the deployed app (used in emails if needed) |
-
-_All providers above have generous free tiers suitable for this demo._
-
-### Gmail API configuration
-
-1. Create a Google Cloud project (or reuse an existing one) and enable the **Gmail API**.
-2. Go to **APIs & Services → Credentials** and create an **OAuth Client ID** (Desktop app is fine for personal use).
-3. Copy the Client ID/Secret into `.env` as `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`.
-4. Generate a refresh token by running the helper script:
+1. **Push to GitHub**
    ```bash
-   GMAIL_CLIENT_ID=xxx \
-   GMAIL_CLIENT_SECRET=yyy \
-   npx tsx scripts/gmail-auth.ts
+   git push origin main
    ```
-   - The script prints an authorization URL. Open it in a browser, log in with the Gmail account that should send emails, and approve the `gmail.send` scope.
-   - Paste the verification code back into the terminal. The script outputs `refresh_token=...`. Save that value as `GMAIL_REFRESH_TOKEN`.
-5. Set `GMAIL_USER` and `EMAIL_FROM` to the Gmail address that completed the consent flow (e.g., `yashpatel150201@gmail.com`).
-6. Deploy the updated environment variables to Vercel and redeploy the app.
 
-> **Limits:** Personal Gmail accounts can send roughly 100 messages/day via the API. For higher limits, use Google Workspace.
+2. **Create Vercel Project**
+   - Go to [Vercel](https://vercel.com)
+   - Import your GitHub repository
+   - Select Next.js as the framework
 
-### Supabase RLS
+3. **Configure Environment Variables**
+   - Add all environment variables from your `.env` file
+   - Ensure `DATABASE_URL` uses connection pooling if using Supabase
+   - Set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL
 
-This project connects to Supabase using a service-role connection string so Prisma/NextAuth can manage the `User`, `Account`, `Session`, and `VerificationToken` tables directly. Because Supabase's built-in `auth.uid()` is not used, we disable Row Level Security on `public."Account"` (see migration `20251120050500_disable_account_rls`). If you plan to expose the database via anon/auth roles or Supabase Auth, re-enable RLS and add the appropriate policies.
+4. **Deploy**
+   - Vercel will automatically build and deploy
+   - After deployment, run migrations:
+     ```bash
+     npx prisma migrate deploy
+     ```
+     Or use Vercel CLI:
+     ```bash
+     vercel env pull .env.production
+     npx prisma migrate deploy
+     ```
 
-### Supabase Connection String for Prisma with Connection Pooler
+5. **Verify**
+   - Test authentication flow
+   - Test task creation with email/calendar
+   - Check Vercel function logs for any errors
 
-To use Supabase's connection pooler with Prisma:
+### Database Migrations
 
-1. Go to Supabase Dashboard → Settings → Database
-2. Under "Connection string", select **"Connection pooling"**
-3. **Important**: Select **"Session" mode** (NOT "Transaction" mode)
-4. Copy the connection string - it should:
-   - Use port **6543** (pooler port)
-   - Include `?pgbouncer=true` in the connection string
-   - Have a hostname like `aws-1-us-east-2.pooler.supabase.com`
-5. Use this as your `DATABASE_URL` in Vercel
-
-**Example format:**
-```
-postgresql://postgres:[PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true
-```
-
-**Why Session mode?** Prisma requires session-level features that aren't available in Transaction mode. The `pgbouncer=true` parameter tells Prisma to disable prepared statements, which are incompatible with connection poolers.
-
-## Local development
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Generate Prisma client
-npm run prisma:generate
-
-# 3. Create migration SQL without a running DB (already generated, optional)
-npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0001_init/migration.sql
-
-# 4. Apply migrations once DATABASE_URL points to a real database
-npm run prisma:migrate -- --name init
-
-# 5. (Optional) seed sample data
-npm run db:seed
-
-# 6. Start the dev server
-npm run dev
-```
-
-Visit `http://localhost:3000/tasks` to use the dashboard. React Query Devtools are enabled in development (bottom-right toggle).
-
-## Running quality checks
+After deployment, ensure your production database schema is up to date:
 
 ```bash
-npm run lint
+# Using Vercel CLI
+vercel env pull .env.production
+npx prisma migrate deploy
 ```
 
-## Deployment (Vercel)
+Or run migrations directly on the production database using the connection string.
 
-1. Push the repo to GitHub.
-2. Create a PostgreSQL database (Supabase/Neon) and copy the connection string.
-3. Provision Gmail API + Google Calendar credentials, populate Vercel project environment variables.
-4. Import the repo in Vercel, select the Next.js framework preset, and deploy.
-5. After deployment, run `npm run prisma:migrate` (locally or via Vercel CLI) so the remote DB schema matches.
-
-## Loom walkthrough (deliverable reminder)
-
-Record a 2–5 minute Loom covering:
-
-- **Architecture choices** + AI tooling used (Cursor, Claude Code)
-- **Demo** of creating/editing tasks + integrations firing (email + calendar)
-- **Deployment URL** + trade-offs and next steps
-- **Key decisions** made during development
-
-## Assumptions & Limitations
+## 📝 Assumptions & Limitations
 
 ### Assumptions
-- Single demo user (no authentication required for assignment)
-- Free-tier services sufficient for demo
-- Vercel deployment target
+
+1. **Single User Demo**: The application is designed as a single-user demo. While the schema supports multi-user functionality, authentication is simplified for demonstration purposes.
+
+2. **Free-Tier Services**: All services used have generous free tiers suitable for demonstration:
+   - Supabase/Neon: Free PostgreSQL database
+   - Gmail API: ~100 emails/day (personal accounts)
+   - Google Calendar API: Free with Google account
+   - Vercel: Free hosting tier
+
+3. **Vercel Deployment**: The application is optimized for Vercel's serverless environment with connection pooling considerations.
+
+4. **Personal Gmail Account**: Email sending uses a personal Gmail account with OAuth2. For production, consider Google Workspace for higher limits.
 
 ### Limitations
-- **No user authentication**: Schema supports `userId` but auth not implemented
-- **One-way calendar sync**: Task → Calendar (not bi-directional)
-- **Basic email templates**: Plain text format (can be enhanced to HTML)
-- **No automated tests**: Structure supports testing but tests not included
+
+1. **No Multi-User Authentication**: While the schema supports `userId`, the current implementation uses NextAuth.js for single-user magic link authentication. Multi-user support would require additional work.
+
+2. **One-Way Calendar Sync**: Calendar integration is one-way (Task → Calendar). Bi-directional sync (Calendar → Task) is not implemented.
+
+3. **Basic Email Templates**: Email notifications use plain text format. HTML templates could be enhanced for better formatting.
+
+4. **No Automated Tests**: The codebase structure supports testing, but automated tests (unit, integration, e2e) are not included.
+
+5. **Gmail Daily Limits**: Personal Gmail accounts are limited to ~100 emails/day via the API. This may be insufficient for high-volume use cases.
+
+6. **No Task Reminders**: While tasks can have due dates, there's no automated reminder system (e.g., cron jobs or scheduled emails).
+
+7. **No Real-Time Collaboration**: The application is single-user. Real-time collaboration features are not implemented.
 
 ### Trade-offs
+
 - **Speed vs. Perfection**: Focused on core requirements and quality over perfection
 - **Simplicity vs. Features**: Chose simple, working solutions over complex features
-- **Free Services**: All services use free tiers (Supabase, Gmail API, Google Calendar, Vercel)
+- **Free Services**: All services use free tiers suitable for demonstration
+- **Development Speed**: Used AI-assisted development tools to accelerate development while maintaining code quality
 
-## Future enhancements
+## 🔮 Future Enhancements
 
-- Multi-user auth with Clerk/Supabase Auth (schema already supports `userId`)
-- Task reminders/notifications closer to due dates (cron or Gmail scheduled emails)
-- Rich calendar syncing (bi-directional updates, event attendees)
-- Analytics panel (burn-down charts, per-category velocity)
-- HTML email templates with better formatting
-- Automated tests (unit, integration, e2e)
-- Real-time collaboration features
+- **Multi-User Support**: Implement proper multi-user authentication and authorization
+- **Task Reminders**: Automated reminders via cron jobs or scheduled emails
+- **Bi-Directional Calendar Sync**: Sync changes from Google Calendar back to tasks
+- **Rich Email Templates**: HTML email templates with better formatting
+- **Analytics Dashboard**: Task completion metrics, burn-down charts, velocity tracking
+- **Automated Testing**: Unit tests, integration tests, and e2e tests
+- **Real-Time Collaboration**: Multi-user collaboration features
+- **Task Dependencies**: Support for task dependencies and subtasks
+- **File Attachments**: Attach files to tasks
+- **Task Comments**: Add comments and notes to tasks
+- **Export/Import**: Export tasks to CSV/JSON, import from other tools
 
-## Documentation
+## 📚 Additional Documentation
 
-- **`README.md`**: This file - setup, architecture, deployment, assumptions, limitations
-- **`DEPLOYMENT_GUIDE.md`**: Step-by-step deployment guide for GitHub and Vercel
-- **`GITHUB_SETUP.md`**: GitHub repository setup instructions
+- **`LOOM_VIDEO_SCRIPT.md`**: Script for video walkthrough demonstration
+- **`scripts/gmail-auth.ts`**: Helper script for Gmail OAuth token generation
+
+## 🤝 Contributing
+
+This is a demonstration project. For questions or improvements, please open an issue or submit a pull request.
+
+## 📄 License
+
+This project is part of a technical assignment and is provided as-is for demonstration purposes.
 
 ---
 
-Questions or tweaks? Ping me and we can iterate on any part of the stack.
+**Built with ❤️ using Next.js, TypeScript, and modern web technologies.**
